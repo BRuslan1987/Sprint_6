@@ -1,33 +1,19 @@
 import allure
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as ec
-from data import Urls
-from conftest import browser
+
 from locators.faq_locators import FaqLocators
+from pages.base_page import BasePage
 
 
-class QuestionsPage:
-    @allure.step("Открытие браузера")
-    def open_browser(self, browser):
-        browser.get(Urls.MAIN_PAGE_URL)
-        return self
+class FaqPage(BasePage):
 
-    @allure.step("Скролл к вопросам")
-    def scroll_to_faq(self, browser):
-        element = browser.find_element(By.CLASS_NAME, "accordion")
-        browser.execute_script("arguments[0].scrollIntoView(true);", element)
-        return self
+    @allure.step('Получаем текста ответа для вопроса {index}')
+    def get_answer_text(self, index):
+        question_locator = self.format_locators(
+            FaqLocators.QUESTION_TEMPLATE, index)
+        answer_locator = self.format_locators(
+            FaqLocators.ANSWER_TEMPLATE, index)
+        self.scroll_page_down()
+        self.click_to_element(question_locator)
+        answer_text = self.get_text_from_element(answer_locator)
 
-    @allure.step("Извлечение вопроса")
-    def get_question(self, browser, index):
-        question_locator = (FaqLocators.QUESTION[0], FaqLocators.QUESTION[1].format(index))
-        question = WebDriverWait(browser, 3).until(ec.element_to_be_clickable(question_locator))
-        question.click()
-        return question.text
-
-    @allure.step("Извлечение ответа")
-    def get_answers(self, browser, index):
-        answers_locator = (FaqLocators.ANSWER[0], FaqLocators.ANSWER[1].format(index))
-        answers = browser.find_element(*answers_locator)
-        return answers.text
+        return answer_text

@@ -1,21 +1,36 @@
 import allure
 import pytest
-from conftest import browser
-from pages.faq_page import QuestionsPage
+
 from data import QuestionsAndAnswers
+from pages.faq_page import FaqPage
 
-
+@allure.suite('Проверяем FAQ')
 class TestMainPage:
-    @allure.title('Проверка выпадающего списка в разделе "Вопросы о важном"')
-    @allure.description('Проверяем, что по клику на стрелочку с вопросом, открывается соответсвующий ответ')
-    @pytest.mark.parametrize('index, question, answer', QuestionsAndAnswers.QUESTIONS_AND_ANSWERS_LIST)
-    def test_check_question_and_answer(self, browser, index, question, answer):
-        page = QuestionsPage()
-        page.open_browser(browser)
-        page.scroll_to_faq(browser)
-        question_text = page.get_question(browser, index)
-        answer_text = page.get_answers(browser, index)
-        # Проверяем, что текст вопроса соответствует ожидаемому
-        assert question_text == question
-        # Проверяем, что текст ответа соответствует ожидаемому
-        assert answer_text == answer
+
+    @allure.title("Проверка ответов на вопросы")
+    @allure.description("Принимаем куки, скроллим страницу в самый низ, "
+                        "кликаем поочерёдно на каждый вопрос и "
+                        "сравниваем полученный ответ с ответом из словаря")
+    @pytest.mark.parametrize("question_data", 
+                            QuestionsAndAnswers.QUESTIONS_AND_ANSWERS_LIST,
+                            ids=lambda data: f"Вопрос {data[0]}: {data[1]}")  # Читаемые имена тестов
+    def test_questions_and_answers(self, driver, question_data):
+        faq_page = FaqPage(driver)
+        
+        with allure.step('Принимаем куки'):
+            faq_page.accept_cookies()
+
+        # Распаковываем кортеж на составляющие
+        question_number, question_text, expected_answer = question_data  # Фикс 1
+
+        with allure.step(f'Кликаем на вопрос "{question_text}" и проверяем ответ'):
+            # Получаем текст ответа по номеру вопроса
+            actual_answer = faq_page.get_answer_text(question_number)  # Фикс 2
+        
+            # Проверяем соответствие ответа
+            assert actual_answer == expected_answer, (  # Фикс 3
+                f'Для вопроса "{question_text}":\n'
+                f'Ожидался ответ: "{expected_answer}"\n'
+                f'Фактический ответ: "{actual_answer}"'
+            )
+

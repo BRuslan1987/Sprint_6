@@ -1,17 +1,17 @@
 class Urls:
-    MAIN_PAGE_URL = 'https://qa-scooter.praktikum-services.ru/'
-    DZEN_URL = 'https://dzen.ru/?yredirect=true'
-
+    main_page = 'https://qa-scooter.praktikum-services.ru/'
+    dzen_page = 'https://dzen.ru/?yredirect=true'
+    order_page = 'https://qa-scooter.praktikum-services.ru/order'
 
 class OrderData:
     # Данные для заказа самоката
     FIRST_ORDER = {
         'name': 'Руслан',
         'last_name': 'Батыров',
-        'address': 'Больая Садовая 20',
-        'metro': 'Маяковского',
-        'number': '+1234567890',
-        'delivery_date': '01.09.2025',
+        'address': 'Большая Садовая 20',
+        'metro': 'Маяковская',
+        'number': '+7234567890',
+        'date': '01.09.2025',
         'rent_days': 'сутки',
         'colour': 'чёрный жемчуг',
         'comment': 'Позвонить за 15 минут'
@@ -23,7 +23,7 @@ class OrderData:
         'address': 'Воздуховская 10',
         'metro': 'Крылатское',
         'number': '+3424123123',
-        'delivery_date': '02.09.2025',
+        'date': '02.09.2025',
         'rent_days': 'двое суток',
         'colour': 'серая безысходность',
         'comment': 'Не звонить!'

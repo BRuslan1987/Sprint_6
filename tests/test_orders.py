@@ -1,23 +1,31 @@
 import allure
-import pytest
+
 from data import OrderData
 from pages.order_details_page import OrderPage
-from conftest import browser
+import sys
+sys.path.insert(0, '/Users/Ruslan/Sprint_6')
 
 
+@allure.suite('Тестирование страницы заказа')
 class TestOrderPage:
-    @allure.title('Проверка позитивного сценария заказа самоката')
-    @allure.description('Проверяем весь флоу позитивного сценария с двумя наборами данных')
-    @pytest.mark.parametrize('button_method, data_order', [('click_first_button', OrderData.FIRST_ORDER),
-                                                           ('click_second_button', OrderData.SECOND_ORDER)])
-    def test_make_an_order(self, browser, data_order, button_method):
-        page = OrderPage()
 
-        # Открытие браузера
-        page.open_browser(browser)
-        # Клик по кнопке "Заказать" в шапке лендинга и в центре лендинга через параметр button_method
-        getattr(page, button_method)(browser)
-        # Заполнение полей для заказа, через параметр data_order
-        page.user_rent_order(browser, **data_order)
-        # Проверка окна подтверждения по тексту "Заказ оформлен
-        page.confirmation_window(browser)
+    @allure.title('Тест создания заказа: Первый сценарий')
+    @allure.description('Позитивный сценарий создания заказа'
+                        ' через верхнюю кнопку')
+    def test_create_order_from_header(self, driver):
+        order_page = OrderPage(driver)
+        order_info = OrderData.FIRST_ORDER
+        order_page.create_order_from_header(order_info)
+        assert order_page.check_order_status_window(), (
+            "Окно с информацией о заказе не появилось")
+
+    @allure.title('Тест создания заказа: Второй сценарий')
+    @allure.description('Позитивный сценарий создания заказа'
+                        ' через нижнюю кнопку')
+    def test_create_order_from_bottom(self, driver):
+        order_page = OrderPage(driver)
+        order_info = OrderData.SECOND_ORDER
+        order_page.create_order_from_bottom(order_info)
+
+        assert order_page.check_order_status_window(), (
+            "Окно с информацией о заказе не появилось")

@@ -1,118 +1,89 @@
 import allure
-
+from selenium.webdriver.common.by import By
+from locators.faq_locators import FaqLocators
 from locators.order_locators import OrderLocators
-from data import Urls
-from selenium.webdriver.common.keys import Keys
-from conftest import browser
+from pages.base_page import BasePage
 
+class OrderPage(BasePage):
 
-class OrderPage:
+    @allure.step('Создание заказа по кнопке в верхней части страницы')
+    def create_order_from_header(self, order_dict):
+        self.accept_cookies()
+        self.scroll_to_element(FaqLocators.ORDER_BUTTON_HEADER)
+        self.click_to_element(FaqLocators.ORDER_BUTTON_HEADER)
+        self.fill_first_form(order_dict)
+        self.next()
+        self.fill_second_form(order_dict)
+        self.submit_order()
 
-    @allure.step("Открытие браузера")
-    def open_browser(self, browser):
-        browser.get(Urls.MAIN_PAGE_URL)
-        return self
+    @allure.step('Создание заказа по кнопке в нижней части страницы')
+    def create_order_from_bottom(self, order_dict):
+        self.accept_cookies()
+        self.scroll_page_down()
+        self.scroll_to_element(OrderLocators.ORDER_BUTTON_BOTTOM)
+        self.click_to_element(OrderLocators.ORDER_BUTTON_BOTTOM)
+        self.fill_first_form(order_dict)
+        self.next()
+        self.fill_second_form(order_dict)
+        self.submit_order()
 
-    @allure.step("Клик по кнопке Заказать в шапке лендинга")
-    def click_first_button(self, browser):
-        browser.find_element(*OrderLocators.ORDER_BUTTON_HEADER).click()
-        return self
+    @allure.step('Переход к следующей форме')
+    def next(self):
+        self.scroll_to_element(OrderLocators.NEXT_BUTTON)
+        self.click_to_element(OrderLocators.NEXT_BUTTON)
 
-    @allure.step("Клик по кнопке Заказать в центре")
-    def click_second_button(self, browser):
-        element = browser.find_element(*OrderLocators.ORDER_CENTER_BUTTON)
-        browser.execute_script("arguments[0].scrollIntoView(true);", element)
-        element.click()
-        return self
+    @allure.step('Подтверждение заказа')
+    def submit_order(self):
+        self.scroll_to_element(OrderLocators.MAKE_ORDER_BUTTON)
+        self.click_to_element(OrderLocators.MAKE_ORDER_BUTTON)
+        self.scroll_to_element(OrderLocators.YES_BUTTON)
+        self.click_to_element(OrderLocators.YES_BUTTON)
 
-    @allure.step("Заполнение поля Имя")
-    def user_name(self, browser, name):
-        browser.find_element(*OrderLocators.NAME).send_keys(name)
-        return self
+    @allure.step('Заполняем первую форму заказа "Для кого самокат"')
+    def fill_first_form(self, order_dict):
+        self.fill(OrderLocators.NAME_INPUT, order_dict.get('name'))
+        self.fill(OrderLocators.LAST_NAME_INPUT, order_dict.get('last_name'))
+        self.fill(OrderLocators.ADDRESS_INPUT, order_dict.get('address'))
+        self.click_to_element(OrderLocators.METRO_INPUT)
+        station_locator = OrderLocators.METRO_STATION_VISIBLE
+        self.select_visible_station(station_locator, order_dict['metro'])
+        self.fill(OrderLocators.PHONE_INPUT, order_dict.get('number'))
 
-    @allure.step("Заполнение поля Фамилия")
-    def user_last_name(self, browser, last_name):
-        browser.find_element(*OrderLocators.LAST_NAME).send_keys(last_name)
-        return self
+    @allure.step('Заполняем вторую форму заказа "Про аренду"')
+    def fill_second_form(self, order_dict):
+        self.fill_date(order_dict.get('date'))
+        self.select_rental_duration(order_dict.get('duration'))
+        color_locator = (OrderLocators.COLOR_BLACK_CHECKBOX
+                         if order_dict.get('color') == 'black' else
+                         OrderLocators.COLOR_GREY_CHECKBOX)
+        self.click_to_element(color_locator)
+        self.fill(OrderLocators.COMMENT_INPUT, order_dict.get('comment'))
 
-    @allure.step("Заполнение поля Адрес")
-    def user_address(self, browser, address):
-        browser.find_element(*OrderLocators.ADDRESS).send_keys(address)
-        return self
+    @allure.step('Установить дату проката')
+    def fill_date(self, date_string):
+        self.fill(OrderLocators.DATE_INPUT, date_string)
+        self.click_by_tag_name('body')
 
-    @allure.step("Заполнение поля Метро")
-    def metro(self, browser, metro):
-        browser.find_element(*OrderLocators.METRO).send_keys(metro)
-        browser.find_element(*OrderLocators.LIST_STATION).click()
-        return self
+    @allure.step('Выбор срока аренды')
+    def select_rental_duration(self, duration):
+        self.scroll_to_element(OrderLocators.RENTAL_DURATION_DROPDOWN)
+        self.click_to_element(OrderLocators.RENTAL_DURATION_DROPDOWN)
+        duration_option_locator = (
+            By.XPATH,
+            OrderLocators.RENTAL_DURATION_OPTION[1].format(duration)
+        )
+        self.scroll_to_element(duration_option_locator)
+        self.click_to_element(duration_option_locator)
 
-    @allure.step("Заполнение поля Телефон")
-    def user_phone(self, browser, phone):
-        browser.find_element(*OrderLocators.NUMBER).send_keys(phone)
-        return self
+    @allure.step('Проверяем наличие окна с информацией о заказе')
+    def check_order_status_window(self):
+        return self.wait_for_element_visible(OrderLocators.STATUS_WINDOW)
 
-    @allure.step('Клик по кнопке "Далее" в форме информации о пользователе')
-    def click_button_next(self, browser):
-        browser.find_element(*OrderLocators.NEXT_BUTTON).click()
-        return self
-
-    @allure.step("Заполнение поля Дата доставки")
-    def date_of_delivery(self, browser, data):
-        (browser.find_element(*OrderLocators.DATE_DELIVERY)
-         .send_keys(data, Keys.ENTER))
-        return self
-
-    @allure.step("Заполнение поля Время аренды")
-    def rental_time(self, browser, day):
-        browser.find_element(*OrderLocators.RENT_TIME).click()
-        select_rent_time_locator = (OrderLocators.SELECT_RENT_TIME[0], OrderLocators.SELECT_RENT_TIME[1].format(day))
-        browser.find_element(*select_rent_time_locator).click()
-        return self
-
-    @allure.step("Выбор цвета")
-    def checkbox_color(self, browser, color):
-        if color == 'чёрный жемчуг':
-            browser.find_element(*OrderLocators.BLACK_COLOR_CHECKBOX).click()
-        elif color == 'серая безысходность':
-            browser.find_element(*OrderLocators.GREY_COLOR_CHECKBOX).click()
-        return self
-
-    @allure.step("Заполнение поля Комментарии к заказу")
-    def comment_for_courier(self, browser, comment):
-        browser.find_element(*OrderLocators.COMMENT).send_keys(comment)
-        return self
-
-    @allure.step("Клик по кнопке Заказать")
-    def click_button_order(self, browser):
-        browser.find_element(*OrderLocators.ORDER_BUTTON).click()
-        return self
-
-    @allure.step("Клик по кнопке 'Да' в окне подтверждения заказа")
-    def click_button_confirmations(self, browser):
-        browser.find_element(*OrderLocators.YES_BUTTON).click()
-        return self
-
-    @allure.step("Проверка текста в окне подтверждения заказа")
-    def confirmation_window(self, browser):
-        text = browser.find_element(*OrderLocators.ORDER_COMPLETED).text
-        assert 'Заказ оформлен' in text
-        return self
-
-    @allure.step("Полный позитивный сценарий")
-    def user_rent_order(self,
-                        browser, name, last_name, address, metro, number,
-                        delivery_date, rent_days, colour, comment):
-        self.user_name(browser, name)
-        self.user_last_name(browser, last_name)
-        self.user_address(browser, address)
-        self.metro(browser, metro)
-        self.user_phone(browser, number)
-        self.click_button_next(browser)
-        self.date_of_delivery(browser, delivery_date)
-        self.rental_time(browser, rent_days)
-        self.checkbox_color(browser, colour)
-        self.comment_for_courier(browser, comment)
-        self.click_button_order(browser)
-        self.click_button_confirmations(browser)
-        self.confirmation_window(browser)
-        return self
+    @allure.step('Выбираем станцию метро')
+    def select_visible_station(self, locator, station_name):
+        self.wait_for_element_visible(locator)
+        stations = self.find_elements_with_wait(locator)
+        for station in stations:
+            if station.text.strip() == station_name:
+                station.click()
+                break
