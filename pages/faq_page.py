@@ -1,19 +1,24 @@
+from.base_page import BasePage
+from locators.faq_locators import FaqLocators
 import allure
 
-from locators.faq_locators import FaqLocators
-from pages.base_page import BasePage
-
-
 class FaqPage(BasePage):
+    @allure.step("Принять куки")
+    def accept_cookies(self):
+        if self.is_element_visible(FaqLocators.COOKIE_BANNER):
+            self.click_to_element(FaqLocators.ACCEPT_COOKIES_BTN)
 
-    @allure.step('Получаем текста ответа для вопроса {index}')
-    def get_answer_text(self, index):
-        question_locator = self.format_locators(
-            FaqLocators.QUESTION_TEMPLATE, index)
-        answer_locator = self.format_locators(
-            FaqLocators.ANSWER_TEMPLATE, index)
-        self.scroll_page_down()
+    @allure.step("Получить текст ответа на вопрос")
+    def get_answer_text(self, question_number):
+        question_locator = self._format_question_locator(question_number)
+        self.scroll_to_element(question_locator)
         self.click_to_element(question_locator)
-        answer_text = self.get_text_from_element(answer_locator)
+        return self.get_text_from_element(
+        self._format_answer_locator(question_number)
+)
 
-        return answer_text
+    def _format_question_locator(self, num):
+        return self.format_locator(FaqLocators.QUESTION_ITEM, num)
+
+    def _format_answer_locator(self, num):
+        return self.format_locator(FaqLocators.ANSWER_ITEM, num)
